@@ -3,8 +3,18 @@ import streamlit as st
 from functools import reduce
 import pandas as pd
 from parser import Parser
+from database import Database
+from models import *
+
 
 parser = Parser()
+
+db = Database('sqlite:///database.db')
+# создаем сессию
+session = db.create_session()
+# добавляем дефолтную дату для относительных изменений
+session.add(Default_date(date=datetime.date(2007, 10, 31)))
+session.commit()
 # получаем страны с кодами валют
 countries = parser.parse_countries()
 
