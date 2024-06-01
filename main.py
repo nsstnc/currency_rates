@@ -5,18 +5,13 @@ import pandas as pd
 from parser import Parser
 from database import Database
 from models import *
+from data_manager import DataManager
 
 
-parser = Parser()
+data = DataManager()
 
-db = Database('sqlite:///database.db')
-# создаем сессию
-session = db.create_session()
-# добавляем дефолтную дату для относительных изменений
-session.add(Default_date(date=datetime.date(2007, 10, 31)))
-session.commit()
 # получаем страны с кодами валют
-countries = parser.parse_countries()
+countries = data.get_countries()
 
 col1, col2, _, _, _, _ = st.columns(6)
 
@@ -58,17 +53,17 @@ ey = date_end.year
 # получаем коды для выбранных стран
 filtered_countries = countries[countries['country'].isin(options)]
 # оставляем уникальные коды
-codes = filtered_countries['code'].unique()
+codes = list(filtered_countries['code'].unique())
 
-dfs = []
-for code in codes:
-    df = parser.parse_currency(code, sd, sm, sy, ed, em, ey)
-    df = df.rename(columns={'rate': f'{code}'})
-    dfs.append(df)
+# dfs = []
+# for code in codes:
+#     df = data.get_currencies(code, sd, sm, sy, ed, em, ey)
+#     df = df.rename(columns={'rate': f'{code}'})
+#     dfs.append(df)
 
 if 'action' in st.session_state:
     try:
-        result = reduce(lambda left, right: pd.merge(left, right, on='date', how='outer'), dfs)
+        result = data.get_currencies(codes, sd, sm, sy, ed, em, ey)
 
         if st.session_state['action'] == 'plot':
             st.line_chart(result.set_index('date'))

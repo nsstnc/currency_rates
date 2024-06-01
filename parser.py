@@ -38,9 +38,9 @@ class Parser:
 
         # приводим все столбцы к нужным типам
         df['date'] = pd.to_datetime(df['date'], format='%d.%m.%Y')
-        df['quantity'] = df['quantity'].astype(int)
+        # df['quantity'] = df['quantity'].astype(int)
         df['rate'] = df['rate'].str.replace(',', '.').astype(float)
-        df['change'] = df['change'].str.replace('+', '').str.replace(',', '.').astype(float)
+        # df['change'] = df['change'].str.replace('+', '').str.replace(',', '.').astype(float)
 
         return df[['date', 'rate']]
 
