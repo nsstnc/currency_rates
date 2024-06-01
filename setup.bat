@@ -9,3 +9,6 @@ pip install -r requirements.txt
 
 echo Виртуальное окружение настроено и зависимости установлены.
 echo Чтобы активировать виртуальное окружение, выполните: call venv\Scripts\activate
+
+
+pause
