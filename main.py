@@ -64,12 +64,11 @@ codes = list(filtered_countries['code'].unique())
 if 'action' in st.session_state:
     try:
         result = data.get_currencies(codes, sd, sm, sy, ed, em, ey)
-
         if st.session_state['action'] == 'plot':
             st.line_chart(result.set_index('date'))
         elif st.session_state['action'] == 'table':
             st.table(result)
     except Exception as e:
-        st.write("Выберите параметры")
+        st.write(e.args[0])
 else:
     st.write("Выберите тип отображения")
