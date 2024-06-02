@@ -55,20 +55,18 @@ filtered_countries = countries[countries['country'].isin(options)]
 # оставляем уникальные коды
 codes = list(filtered_countries['code'].unique())
 
-# dfs = []
-# for code in codes:
-#     df = data.get_currencies(code, sd, sm, sy, ed, em, ey)
-#     df = df.rename(columns={'rate': f'{code}'})
-#     dfs.append(df)
+
 
 if 'action' in st.session_state:
     try:
-        result = data.get_currencies(codes, sd, sm, sy, ed, em, ey)
+        plot, table = data.get_currencies(codes, sd, sm, sy, ed, em, ey)
         if st.session_state['action'] == 'plot':
-            st.line_chart(result.set_index('date'))
+            st.write(f"Относительные изменения курсов валют к {data.get_default_date()}")
+            st.line_chart(plot.set_index('date'))
         elif st.session_state['action'] == 'table':
-            st.table(result)
+            st.table(table)
     except Exception as e:
         st.write(e.args[0])
+        # st.write(e)
 else:
     st.write("Выберите тип отображения")
