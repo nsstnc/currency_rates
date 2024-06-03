@@ -1,73 +1,71 @@
-# Веб-приложение для отображения курсов валют
+# Currency Rates Web Application
 
-## Обзор
+## Overview
 
-Этот проект представляет собой веб-приложение, которое отображает курсы обмена валют для различных стран. Пользователи могут выбирать диапазон дат и способ отображения информации. При выборе "Plot" приложение генерирует график, показывающий относительные изменения курсов валют по отношению к дефолтной дате, указанной в базе данных.
-![alt text](markdown-images/table.png)
-![alt text](markdown-images/plot.png)
+This project is a web application that displays exchange rates for various countries. Users can select a date range and the desired way of displaying information. When selecting "Plot," the application generates a graph showing the relative changes in exchange rates compared to the default date specified in the database.
 
-## Функциональные возможности
+![Table View](markdown-images/table.png)
+![Plot View](markdown-images/plot.png)
 
-- Отображение курсов валют в табличном формате
-- Возможность просмотра изменений курсов валют в виде графика
-- Выбор диапазона дат для исторических данных
-- Данные запрашиваются с [Finmarket](https://www.finmarket.ru) при первом запросе и кэшируются в базе данных SQLite
-- Список стран и их основные валюты парсятся с [IBAN](https://www.iban.ru/currency-codes) при обновлении страницы приложения, причем в базу данных записываются только новые или измененные записи
+## Features
 
-## Технологический стек
+- Display exchange rates in a tabular format
+- View changes in exchange rates as a graph
+- Select a date range for historical data
+- Data is fetched from [Finmarket](https://www.finmarket.ru) on the first request and cached in an SQLite database
+- The list of countries and their main currencies is parsed from [IBAN](https://www.iban.ru/currency-codes) when the application page is refreshed, with only new or modified records being added to the database
+
+## Tech Stack
 
 - **Backend**: Python, SQLite, SQLAlchemy
-- **Обработка данных**: Pandas, BeautifulSoup
+- **Data Processing**: Pandas, BeautifulSoup
 - **Frontend**: Streamlit
 
-## Установка
+## Installation
 
-1. Клонируйте репозиторий:
+1. Clone the repository:
 
     ```bash
     git clone https://github.com/nsstnc/currency_rates.git
     cd currency_rates
     ```
 
-2. Запустите скрипт setup для настройки виртуального окружения и запуска проекта:
+2. Run the setup script to configure the virtual environment and start the project:
 
     ```bash
-    sh setup.sh  # В Windows используйте `setup.bat`
+    sh setup.sh  # Use `setup.bat` on Windows
     ```
 
+## Usage
 
-## Использование
+1. After running the setup, the browser page should open automatically. If it does not, open your web browser and navigate to `http://localhost:8501`.
 
-1. После запуска setup страница в браузере должна открыться сама, но если этого не произошло ткройте ваш веб-браузер и перейдите по адресу `http://localhost:8501`.
+## Application Workflow
 
-## Рабочий процесс приложения
+1. **Initial Setup**:
+    - On the first request, exchange rates are parsed from [Finmarket](https://www.finmarket.ru) and saved to an SQLite database.
+    - The list of countries and their main currencies is fetched from [IBAN](https://www.iban.ru/currency-codes) and updated in the database if there are new or modified records.
 
-1. **Первоначальная настройка**:
-    - При первом запросе курсы валют парсятся с [Finmarket](https://www.finmarket.ru) и сохраняются в базе данных SQLite.
-    - Список стран и их основные валюты запрашиваются с [IBAN](https://www.iban.ru/currency-codes) и обновляются в базе данных при наличии новых или измененных записей.
+2. **User Interaction**:
+    - The user selects a date range within 2 years for which they want to view exchange rates.
+    - The user selects the countries whose main currencies they want to see.
+    - The user chooses how to display the data: in a table or as a graph.
 
-2. **Взаимодействие с пользователем**:
-    - Пользователь выбирает диапазон дат в пределах 2-ух лет, для которого он хочет просмотреть курсы валют.
-    - Пользователь выбирает страны, курсы основных валют которых он хочет видеть.
-    - Пользователь выбирает, как отображать данные: в таблице или в виде графика.
+3. **Data Display**:
+    - If the requested data is already in the database, it is retrieved and displayed.
+    - If the data is not in the database, it is fetched from Finmarket, saved to the database, and then displayed.
 
-3. **Отображение данных**:
-    - Если запрашиваемые данные уже есть в базе данных, они извлекаются и отображаются.
-    - Если данных нет в базе данных, они запрашиваются с Finmarket, сохраняются в базе данных и затем отображаются.
-
-
-
-
-## Структура файлов
+## File Structure
 currency_rates/  
-├── markdown-images/ # Директория для хранения изображений документации md  
-├── data_manager.py # Класс, реализующий работу с данными  
-├── database.db # Файл базы данных SQLite (создается после первого запуска приложения)  
-├── database.py # Класс для настройки базы данных  
-├── main.py # Основной файл приложения - интерфейс Strealit  
-├── models.py # Модели таблиц для базы данных  
-├── parser.py # Класс, реализующий функции парсинга данных  
-├── README.md # Документация проекта  
-├── requirements.txt # Список зависимостей  
-├── setup.bat # Скрипт настройки виртуального окружения и запуска проекта для Windows-систем    
-├── setup.sh # Скрипт настройки виртуального окружения и запуска проекта для UNIX-систем  
+├── markdown-images/ # Directory for storing documentation images  
+├── data_manager.py # Class for data management  
+├── database.db # SQLite database file (created after the first application run)  
+├── database.py # Database setup class  
+├── main.py # Main application file - Streamlit interface  
+├── models.py # Database table models  
+├── parser.py # Class implementing data parsing functions  
+├── README.md # Project documentation  
+├── requirements.txt # List of dependencies  
+├── setup.bat # Script to set up the virtual environment and start the project for Windows systems  
+├── setup.sh # Script to set up the virtual environment and start the project for UNIX systems  
+
