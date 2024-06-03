@@ -5,8 +5,6 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-echo "Виртуальное окружение настроено и зависимости установлены."
-echo "Чтобы активировать виртуальное окружение, выполните: source venv/bin/activate"
-
+streamlit run main.py
 
 read -p "Press Enter to exit..."
