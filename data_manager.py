@@ -95,6 +95,19 @@ class DataManager:
 
         return min_existing_date, max_existing_date, {record.date for record in existing_records}
 
+    # максимум и минимум из диапазона с парсера
+    def get_min_max_dates(self, date_start: datetime, date_end: datetime) -> (datetime.date, datetime.date):
+        sd = date_start.day
+        sm = date_start.month
+        sy = date_start.year
+
+        ed = date_end.day
+        em = date_end.month
+        ey = date_end.year
+        df = self.parser.parse_currency("EUR", sd, sm, sy, ed, em, ey)
+
+        return df['date'].min(), df['date'].max()
+
     # получение курсов из базы данных
     def get_currencies_from_db(self, date_start: datetime, date_end: datetime,
                                table: Union[Type["Changes"], Type["Rates"]]) -> pd.DataFrame:
@@ -135,16 +148,15 @@ class DataManager:
         if len(request_codes) == 0:
             raise ValueError('Не выбраны параметры')
 
+        # из заданного диапазона получаем минимальную и максимальную дату, имеющиеся в БД
         minimum_exist, maximum_exist, existing_dates = self.get_existing_dates(datetime.date(sy, sm, sd),
                                                                                datetime.date(ey, em, ed))
 
-        # TODO когда даты старта или даты конца нет в бд, плохо отрабатывают третье и четвертое условия
-        # если нижняя граница имеющихся курсов больше, чем требуемая дата
-        # либо верхняя граница имеющихся ниже, чем требуемая
-        if minimum_exist is None or maximum_exist is None or minimum_exist > datetime.date(sy, sm,
-                                                                                           sd) or maximum_exist < datetime.date(
-            ey, em, ed):
-            print("парсим")
+        # из заданного диапазона получаем минимальную и максимальную дату, имеющиеся на сайте, с которого парсим
+        minimum_from_site, maximum_from_site = self.get_min_max_dates(datetime.date(sy, sm, sd), datetime.date(ey, em, ed))
+
+
+        if minimum_exist is None or maximum_exist is None or minimum_exist != minimum_from_site or maximum_exist != maximum_from_site:
             dfs = []
             # парсим курсы для всех валют в заданном диапазоне
             for code in ["USD",
@@ -162,7 +174,6 @@ class DataManager:
             # добавляем недостающие записи в БД
             self.add_new_currencies_to_db(result, existing_dates)
 
-        print("берем из бд")
         table = self.get_currencies_from_db(datetime.date(sy, sm, sd), datetime.date(ey, em, ed), Rates)
         plot = self.get_currencies_from_db(datetime.date(sy, sm, sd), datetime.date(ey, em, ed), Changes)
 

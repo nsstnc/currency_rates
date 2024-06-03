@@ -1,9 +1,4 @@
-import datetime
 import streamlit as st
-from functools import reduce
-import pandas as pd
-from parser import Parser
-from database import Database
 from models import *
 from data_manager import DataManager
 
@@ -26,14 +21,12 @@ with col2:
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Выберите диапазон дат")
-    st.session_state['date_start'] = datetime.datetime.now().date() - datetime.timedelta(days=30)
-    st.session_state['date_end'] = datetime.datetime.now().date()
 
-    date_start = st.date_input("С",
+    date_start = st.date_input("С", value=datetime.datetime.now().date() - datetime.timedelta(days=30),
                                min_value=datetime.date(1992, 1, 1),
                                max_value=datetime.datetime.now().date(),
                                key="date_start")
-    date_end = st.date_input("По",
+    date_end = st.date_input("По", value=st.session_state["date_start"] + datetime.timedelta(days=30),
                              min_value=st.session_state["date_start"],
                              max_value=min(st.session_state["date_start"] + datetime.timedelta(days=365 * 2),
                                            datetime.datetime.now().date()),
@@ -69,6 +62,6 @@ if 'action' in st.session_state:
             st.table(table)
     except Exception as e:
         st.write(e.args[0])
-        # st.write(e)
+        st.write(e)
 else:
     st.write("Выберите тип отображения")
