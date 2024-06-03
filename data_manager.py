@@ -1,5 +1,6 @@
 from parser import Parser
 from database import Database
+import datetime
 from models import *
 import pandas as pd
 from functools import reduce
