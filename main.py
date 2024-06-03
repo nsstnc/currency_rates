@@ -26,14 +26,16 @@ with col2:
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Выберите диапазон дат")
+    st.session_state['date_start'] = datetime.datetime.now().date() - datetime.timedelta(days=30)
+    st.session_state['date_end'] = datetime.datetime.now().date()
 
-    date_start = st.date_input("С", value=datetime.datetime.now().date(),
+    date_start = st.date_input("С",
                                min_value=datetime.date(1992, 1, 1),
                                max_value=datetime.datetime.now().date(),
                                key="date_start")
-    date_end = st.date_input("По", value=min(datetime.datetime.now().date(), st.session_state.date_start),
-                             min_value=st.session_state.date_start,
-                             max_value=min(st.session_state.date_start + datetime.timedelta(days=365 * 2),
+    date_end = st.date_input("По",
+                             min_value=st.session_state["date_start"],
+                             max_value=min(st.session_state["date_start"] + datetime.timedelta(days=365 * 2),
                                            datetime.datetime.now().date()),
                              key="date_end")
 with col2:
