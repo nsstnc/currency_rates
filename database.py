@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import *
 
@@ -11,7 +11,6 @@ class Database:
 
     def _initialize_database(self):
         Base.metadata.create_all(self.engine)
-
 
     def create_session(self):
         return self.Session()

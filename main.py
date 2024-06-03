@@ -61,7 +61,7 @@ if 'action' in st.session_state:
         elif st.session_state['action'] == 'table':
             st.table(table)
     except Exception as e:
-        st.write(e.args[0])
+        # st.write(e.args[0])
         st.write(e)
 else:
     st.write("Выберите тип отображения")
