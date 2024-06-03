@@ -5,6 +5,7 @@ import pandas as pd
 from functools import reduce
 from sqlalchemy import func, desc, asc, select, update
 from typing import Type, Union
+from sqlalchemy.orm import Query
 
 
 class DataManager:
@@ -19,7 +20,16 @@ class DataManager:
         session = db.create_session()
         return session
 
-    def add_default_date(self, date):
+    def from_sql_to_dataframe(self, sql_data: Query) -> pd.DataFrame:
+        # преобразуем результат в список словарей
+        result = [row.__dict__ for row in sql_data]
+        # удаляем внутренний атрибут SQLAlchemy '_sa_instance_state'
+        for d in result:
+            d.pop('_sa_instance_state', None)
+
+        return pd.DataFrame(result)
+
+    def add_default_date(self, date: datetime.date) -> None:
         existing_record = self.session.execute(select(Default_date).limit(1)).scalar_one_or_none()
 
         if existing_record is None:
@@ -38,16 +48,47 @@ class DataManager:
                 self.session.commit()
                 self.get_currencies(["EUR"], date.day, date.month, date.year, date.day, date.month, date.year)
 
-
-
-    def get_default_date(self):
+    def get_default_date(self) -> datetime.date:
         return (self.session.execute(select(Default_date).limit(1)).scalar_one_or_none()).date
 
-    def get_countries(self):
-        return self.parser.parse_countries()
+    def get_countries(self) -> pd.DataFrame:
+        # парсим страны
+        countries = self.parser.parse_countries()
+
+        countries_from_db = self.from_sql_to_dataframe(self.session.query(Countries).order_by(
+            asc(Countries.country)).all())
+
+        # если в БД есть какие-то записи
+        if not countries_from_db.empty:
+            # изменившиеся и новые записи
+            merged_df = countries.merge(countries_from_db, on='country', how='left', suffixes=('', '_existing'))
+
+            changed_records = merged_df[
+                (merged_df['code'] != merged_df['code_existing']) | merged_df['code_existing'].isna()]
+
+            # выделяем только изменившиеся записи в новый фрейм
+            changed_df = changed_records[['country', 'code']]
+
+            for index, row in changed_df.iterrows():
+                if pd.notna(row['code']):
+                    # если запись существует, обновляем ее
+                    self.session.query(Countries).filter(Countries.country == row['country']).update(
+                        {'code': row['code']})
+                    self.session.commit()
+                else:
+                    # если нет, добавляем новую
+                    self.session.add([Countries(country=row['country'], code=row['code'])])
+                    self.session.commit()
+        else:
+            # записываем страны в таблицу БД
+            countries.to_sql('countries', con=self.session.bind, if_exists="append", index=False)
+            self.session.commit()
+
+        return self.from_sql_to_dataframe(self.session.query(Countries).order_by(
+            asc(Countries.country)).all())
 
     # получаем минимальную и максимальную даты из БД в диапазоне date_start - date_end
-    def get_existing_dates(self, date_start: datetime, date_end: datetime):
+    def get_existing_dates(self, date_start: datetime, date_end: datetime) -> (datetime.date, datetime.date, dict):
         existing_records = self.session.query(Rates).filter(Rates.date.between(date_start, date_end)).all()
         min_existing_date, max_existing_date = self.session.query(func.min(Rates.date), func.max(Rates.date)).filter(
             Rates.date.between(date_start, date_end)).one()
@@ -56,18 +97,14 @@ class DataManager:
 
     # получение курсов из базы данных
     def get_currencies_from_db(self, date_start: datetime, date_end: datetime,
-                               table: Union[Type["Changes"], Type["Rates"]]):
-        result = self.session.query(table).filter(table.date.between(date_start, date_end)).order_by(
-            asc(table.date)).all()
-        # преобразуем результат в список словарей
-        data = [row.__dict__ for row in result]
-        # удаляем внутренний атрибут SQLAlchemy '_sa_instance_state'
-        for d in data:
-            d.pop('_sa_instance_state', None)
+                               table: Union[Type["Changes"], Type["Rates"]]) -> pd.DataFrame:
+        result = self.from_sql_to_dataframe(
+            self.session.query(table).filter(table.date.between(date_start, date_end)).order_by(
+                asc(table.date)).all())
 
-        return pd.DataFrame(data)
+        return result
 
-    def add_new_currencies_to_db(self, df, existing_dates):
+    def add_new_currencies_to_db(self, df: pd.DataFrame, existing_dates: dict) -> None:
         def calculate_relative_change(row, reference_row):
             return ((row - reference_row) / reference_row) * 100
 
@@ -94,7 +131,7 @@ class DataManager:
             relative_changes_df.to_sql('changes', con=self.session.bind, if_exists="append", index=False)
             self.session.commit()
 
-    def get_currencies(self, request_codes, sd, sm, sy, ed, em, ey):
+    def get_currencies(self, request_codes: list, sd: int, sm: int, sy: int, ed: int, em: int, ey: int):
         if len(request_codes) == 0:
             raise ValueError('Не выбраны параметры')
 
